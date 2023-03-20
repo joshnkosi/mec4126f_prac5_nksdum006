@@ -79,12 +79,10 @@ void init_switches(void)
 
 void init_external_interrupts(void)
 {
-	RCC -> APB2ENR |= RCC_APB2ENR_SYSCFGCOMPEN;                   // enables clock for system configuration
-	SYSCFG -> EXTICR[0] |= SYSCFG_EXTICR1_EXTI1_PA|               // routes PA1 AND PA2 to EXTI1 and EXTI2
-			               SYSCFG_EXTICR1_EXTI2_PA;
-	EXTI -> IMR |= EXTI_IMR_MR1|
-			       EXTI_IMR_MR2;
-	EXTI -> FTSR |= EXTI_FTSR_TR1|
-			        EXTI_FTSR_TR2;
-	NVIC_EnableIRQ(EXTI1_2_IRQn);
+	RCC -> APB2ENR |= RCC_APB2ENR_SYSCFGCOMPEN;
+	SYSCFG -> EXTICR[0] |= SYSCFG_EXTICR1_EXTI3_PA;
+	EXTI -> IMR |= EXTI_IMR_MR3;
+	EXTI -> FTSR|= EXTI_FTSR_TR3;
+
+	NVIC_EnableIRQ(EXTI2_3_IRQn);
 }
