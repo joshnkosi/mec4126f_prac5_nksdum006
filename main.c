@@ -4,6 +4,9 @@
 #include <stdio.h>
 #include <stdint.h>
 
+// global variables
+uint8_t sw_count;
+
 //function declarations
 void display_on_LCD(uint8_t number);
 void init_LEDs(void);
@@ -14,29 +17,38 @@ void init_external_interrupts(void);
 void main(void)
 {
   uint8_t count;
-  count = 0;
+  count = 3;
+  sw_count = 5;
 
   init_LCD();
   init_LEDs();
   init_switches();
+  display_on_LCD(count);
 
   //Infinite loop
   while (1)
     {
 	  display_on_LCD(count);
 	  display_on_LEDs(count);
-
-	  if (( GPIOA -> IDR & GPIO_IDR_1)==0)       //checks if sw1 is pressed then increments count by 1
+	  if (sw_count%2 == 1)
 	  {
-		  if (count < 255)
-			  count++;
+		  if (( GPIOA -> IDR & GPIO_IDR_1)==0)       //checks if sw1 is pressed then increments count by 1
+		  {
+			  if (count < 255)
+				  count++;
+		  }
+		  else if ((GPIOA -> IDR & GPIO_IDR_2)==0)   //checks if sw2 is pressed then decrements count by 1
+		  {
+			  if (count > 0)
+				  count--;
+		  }
+		  delay(100000);
 	  }
-	  else if ((GPIOA -> IDR & GPIO_IDR_2)==0)   //checks if sw2 is pressed then decrements count by 1
+	  else
 	  {
-		  if (count > 0)
-			  count--;
+		  display_on_LCD(0);
+		  display_on_LEDs(0);
 	  }
-	  delay(100000);
     }
 }
 
@@ -73,10 +85,11 @@ void display_on_LEDs(uint8_t n_LEDs)
 void init_switches(void)
 {
 	RCC -> AHBENR |= RCC_AHBENR_GPIOAEN;
-	GPIOA -> MODER &= ~(GPIO_MODER_MODER1|GPIO_MODER_MODER2);       //initializes PA0 and PA1 to input
-	GPIOA -> PUPDR |= (GPIO_PUPDR_PUPDR1_0|GPIO_PUPDR_PUPDR2_0);	// enables pull up resistors to PA0 and PA1
+	GPIOA -> MODER &= ~(GPIO_MODER_MODER1|GPIO_MODER_MODER2|GPIO_MODER_MODER3);       //initializes PA0 and PA1 to input
+	GPIOA -> PUPDR |= (GPIO_PUPDR_PUPDR1_0|
+			           GPIO_PUPDR_PUPDR2_0|
+					   GPIO_PUPDR_PUPDR3_0);	// enables pull up resistors to PA0 and PA1
 }
-
 void init_external_interrupts(void)
 {
 	RCC -> APB2ENR |= RCC_APB2ENR_SYSCFGCOMPEN;
@@ -86,3 +99,10 @@ void init_external_interrupts(void)
 
 	NVIC_EnableIRQ(EXTI2_3_IRQn);
 }
+
+void EXTI2_3_IRQHandler(void)
+{
+	sw_count +=1;
+	EXTI->PR |= EXTI_PR_PR3;
+}
+
